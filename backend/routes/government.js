@@ -1,8 +1,8 @@
 import express from 'express';
 import { supabase } from '../utils/db.js';
 import { authenticateToken, authorizeGovernment } from '../middleware/auth.js';
-import ExcelJS from 'xlsx';
-
+import XLSX from 'xlsx';
+import { appendToExcel } from '../utils/excelwriter.js';
 const router = express.Router();
 
 router.use(authenticateToken, authorizeGovernment);
@@ -22,7 +22,7 @@ router.post('/msp', async (req, res) => {
       .single();
 
     if (error) throw error;
-
+    appendToExcel("msp_data", "MSP", data);
     res.status(201).json({ message: 'MSP added successfully', data });
   } catch (error) {
     console.error('Error adding MSP:', error);
@@ -91,6 +91,7 @@ router.post('/cold-storage', async (req, res) => {
       .single();
 
     if (error) throw error;
+    appendToExcel("cold_storage", "ColdStorage", data);
 
     res.status(201).json({ message: 'Cold storage data added successfully', data });
   } catch (error) {
@@ -150,7 +151,7 @@ router.post('/fuel-prices', async (req, res) => {
       .single();
 
     if (error) throw error;
-
+    appendToExcel("fuel_prices", "FuelPrices", data);
     res.status(201).json({ message: 'Fuel price added successfully', data });
   } catch (error) {
     console.error('Error adding fuel price:', error);
@@ -209,7 +210,7 @@ router.post('/market-prices', async (req, res) => {
       .single();
 
     if (error) throw error;
-
+    appendToExcel("market_prices", "MarketPrices", data);
     res.status(201).json({ message: 'Market price added successfully', data });
   } catch (error) {
     console.error('Error adding market price:', error);

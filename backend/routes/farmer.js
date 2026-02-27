@@ -4,7 +4,7 @@ import { authenticateToken, authorizeFarmer } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.use(authenticateToken, authorizeFarmer);
+router.use(authenticateToken);
 
 router.get('/msp', async (req, res) => {
   try {

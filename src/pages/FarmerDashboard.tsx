@@ -14,7 +14,13 @@ export const FarmerDashboard = () => {
   const [fuelPrices, setFuelPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedState, setSelectedState] = useState('');
 
+  const states = [...new Set(coldStorage.map((item: any) => item.state))];
+
+  const filteredColdStorage = coldStorage.filter(
+  (item: any) => item.state === selectedState
+);
   useEffect(() => {
     if (!token) return;
     loadData();
@@ -39,6 +45,20 @@ export const FarmerDashboard = () => {
     }
   };
 
+  const formatMSPData = () => {
+    const grouped: any = {};
+
+    mspData.forEach((item: any) => {
+      if (!grouped[item.commodity]) {
+        grouped[item.commodity] = { commodity: item.commodity };
+      }
+      grouped[item.commodity][item.year] = item.price;
+    });
+
+    return Object.values(grouped);
+  };
+
+  const years = [...new Set(mspData.map((item: any) => item.year))];
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -106,10 +126,48 @@ export const FarmerDashboard = () => {
           )}
 
           {activeTab === 'msp' && (
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-4">Minimum Support Price (MSP)</h2>
+            <div className="bg-white p-6 rounded-lg shadow space-y-6">
+              <h2 className="text-xl font-bold">Minimum Support Price (MSP)</h2>
+
+              {mspData.length > 0 ? (
+                <>
+                {years.map((year) => {
+                  const yearData = mspData.filter(
+                    (item: any) => item.year === year
+                  );
+
+                  return (
+                    <div key={year} className="mb-8">
+                      <h3 className="text-lg font-semibold mb-3">
+                        Year {year}
+                      </h3>
+
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={yearData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="commodity" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar
+                            dataKey="price"
+                            fill="#16a34a"
+                            name="MSP Price (₹)"
+                            radius={[6, 6, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  );
+                })}
+              </>
+              ) : (
+                <p className="text-gray-500">No MSP data available</p>
+              )}
+
+              {/* Optional Table Below Chart */}
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm mt-6">
                   <thead>
                     <tr className="border-b-2 border-gray-300">
                       <th className="text-left py-2 px-4">Commodity</th>
@@ -152,10 +210,62 @@ export const FarmerDashboard = () => {
           )}
 
           {activeTab === 'cold-storage' && (
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-4">Cold Storage Data</h2>
+            <div className="bg-white p-6 rounded-lg shadow space-y-6">
+              <h2 className="text-xl font-bold">Cold Storage Distribution</h2>
+
+              <div className="flex items-center gap-4">
+                <label className="font-medium">Select State:</label>
+
+                <select
+                  value={selectedState}
+                  onChange={(e) => setSelectedState(e.target.value)}
+                  className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="">-- Choose State --</option>
+                  {states.map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* CHARTS */}
+              {selectedState ? (
+                filteredColdStorage.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={filteredColdStorage}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="year" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+
+                      <Bar
+                        dataKey="fci_owned"
+                        fill="#f59e0b"
+                        name="FCI Owned"
+                        radius={[6, 6, 0, 0]}
+                      />
+
+                      <Bar
+                        dataKey="private_owned"
+                        fill="#3b82f6"
+                        name="Private Owned"
+                        radius={[6, 6, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-gray-500">No data available for this state</p>
+                )
+              ) : (
+                <p className="text-gray-500">Please select a state to view analytics</p>
+              )}
+
+              {/* Table Below */}
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm mt-6">
                   <thead>
                     <tr className="border-b-2 border-gray-300">
                       <th className="text-left py-2 px-4">State</th>

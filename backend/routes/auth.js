@@ -90,7 +90,6 @@ router.post('/login', async (req, res) => {
     }
 
     const token = generateToken(user.id, user.role);
-
     res.json({
       message: 'Login successful',
       token,
